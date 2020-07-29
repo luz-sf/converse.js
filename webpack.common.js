@@ -13,6 +13,7 @@ module.exports = {
     watchOptions: {
         ignored: [/dist/, /spec/, /.*\~/]
     },
+    target: 'node',
     module: {
         rules: [
         {

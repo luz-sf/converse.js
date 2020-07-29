@@ -773,9 +773,31 @@ converse.plugins.add('converse-chatview', {
             },
 
             async onFormSubmitted (ev) {
+
+                function criptografar(mensagem){
+                    
+                    var CryptoJS = require("crypto-js");
+                    const utf8 = require('utf8');
+                    var forge = require('node-forge');
+
+                    var chave = 'texto qualquer';
+
+                    var key = CryptoJS.MD5(utf8.encode(chave)).toString(CryptoJS.enc.Latin1);
+                    key = key + key.substring(0, 8);
+                    var cipher   = forge.cipher.createCipher('3DES-ECB', forge.util.createBuffer(key));
+                    cipher.start({iv: ''});
+                    cipher.update(forge.util.createBuffer(mensagem, 'utf-8'));
+                    cipher.finish();
+                    var encrypted = cipher.output;
+            
+                    return forge.util.encode64(encrypted.getBytes());
+                }
+                
                 ev.preventDefault();
                 const textarea = this.el.querySelector('.chat-textarea');
                 const message_text = textarea.value.trim();
+                var message_criptografada = '';
+                
                 if (_converse.message_limit && message_text.length > _converse.message_limit ||
                         !message_text.replace(/\s/g, '').length) {
                     return;
@@ -795,9 +817,10 @@ converse.plugins.add('converse-chatview', {
                 }
                 u.addClass('disabled', textarea);
                 textarea.setAttribute('disabled', 'disabled');
+                message_criptografada = criptografar(message_text);
 
                 const is_command = this.parseMessageForCommands(message_text);
-                const message = is_command ? null : await this.model.sendMessage(message_text, spoiler_hint);
+                const message = is_command ? null : await this.model.sendMessage(message_criptografada, spoiler_hint);
                 if (is_command || message) {
                     hint_el.value = '';
                     textarea.value = '';

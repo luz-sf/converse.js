@@ -203,6 +203,30 @@ converse.plugins.add('converse-message-view', {
             },
 
             async transformBodyText (text) {
+
+                function descriptografar(texto){
+                    var CryptoJS = require("crypto-js");
+                    const utf8 = require('utf8');
+                    var forge = require('node-forge');
+
+                    var chave = 'texto qualquer';
+                    
+                    var chaveCriptografa = CryptoJS.MD5(utf8.encode(chave)).toString(CryptoJS.enc.Latin1);
+                    chaveCriptografa = chaveCriptografa + chaveCriptografa.substring(0, 8);
+                    var modoCriptografia = forge.cipher.createDecipher('3DES-ECB', forge.util.createBuffer(chaveCriptografa));
+                    var mensagemEncriptada = forge.util.decode64(texto);
+                    modoCriptografia.start({iv:''});
+                    modoCriptografia.update(forge.util.createBuffer(mensagemEncriptada, 'utf-8'));
+                    modoCriptografia.finish();
+                    var descriptografia = modoCriptografia.output; 
+                    var hexadecimal = (descriptografia.toHex()).toString();
+                    var mensagemDescriptografada = '';
+                    for (var n = 0; n < hexadecimal.length; n += 2) {
+                        mensagemDescriptografada += String.fromCharCode(parseInt(hexadecimal.substr(n, 2), 16)); 
+                    }
+                    return mensagemDescriptografada;
+                }
+
                 /**
                  * Synchronous event which provides a hook for transforming a chat message's body text
                  * before the default transformations have been applied.
@@ -228,7 +252,7 @@ converse.plugins.add('converse-message-view', {
                  * @example _converse.api.listen.on('afterMessageBodyTransformed', (view, text) => { ... });
                  */
                 await _converse.api.trigger('afterMessageBodyTransformed', this, text, {'Synchronous': true});
-                return text;
+                return descriptografar(text);
             },
 
             async renderChatMessage () {
